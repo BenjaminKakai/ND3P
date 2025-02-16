@@ -1,0 +1,19 @@
+/**
+ * Generate a unique code for database records
+ * @param {number} length - Length of the code (default: 8)
+ * @returns {string} Generated unique code
+ */
+function generateUniqueCode(length = 8) {
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let result = '';
+
+    for (let i = 0; i < length; i++) {
+        result += characters.charAt(Math.floor(Math.random() * characters.length));
+    }
+
+    return result;
+}
+
+module.exports = {
+    generateUniqueCode
+};

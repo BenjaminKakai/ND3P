@@ -1,0 +1,107 @@
+# API Documentation
+
+## Authentication & Token Retrieval
+
+**Endpoint:** `POST /api/auth/login`
+
+**Description:**
+This endpoint allows users to authenticate and retrieve a JWT token. You only need to use this if you don’t already have a valid token.
+
+**Request:**
+```bash
+curl -X POST http://localhost:3000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "benjaminkakai001@gmail.com",
+    "password": "co37x74bob"
+  }'
+```
+
+---
+
+## Store API
+
+**Endpoint:** `GET /api/stores`
+
+**Description:**
+Retrieves a list of available stores.
+
+**Request:**
+```bash
+curl -X GET http://localhost:3000/api/stores \
+  -H "Authorization: Bearer <your_jwt_token>"
+```
+
+---
+
+## Services API
+
+**Endpoint:** `GET /api/services`
+
+**Description:**
+Fetches a list of available services.
+
+**Request:**
+```bash
+curl -X GET http://localhost:3000/api/services \
+  -H "Authorization: Bearer <your_jwt_token>"
+```
+
+---
+
+## Staff API
+
+**Endpoint:** `GET /api/staff`
+
+**Description:**
+Retrieves a list of staff members.
+
+**Request:**
+```bash
+curl -X GET http://localhost:3000/api/staff \
+  -H "Authorization: Bearer <your_jwt_token>"
+```
+
+---
+
+## Offers API
+
+**Endpoint:** `GET /api/offers`
+
+**Description:**
+Fetches the available offers.
+
+**Request:**
+```bash
+curl -X GET http://localhost:3000/api/offers \
+  -H "Authorization: Bearer <your_jwt_token>"
+```
+
+---
+
+## Booking API
+
+**Endpoint:** `POST /api/bookings`
+
+**Description:**
+Creates a new booking based on an available offer.
+
+**Request:**
+```bash
+curl -X POST http://localhost:3000/api/bookings \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <your_jwt_token>" \
+  -d '{
+    "offerId": "offer-test-001",
+    "startTime": "2025-03-01T14:00:00",
+    "endTime": "2025-03-01T15:00:00"
+  }'
+```
+
+---
+
+## Notes:
+- Replace `<your_jwt_token>` with the actual token received from the authentication endpoint.
+- Ensure the API server is running at `http://localhost:3000` or change the URL accordingly.
+- Use valid offer IDs when making a booking request.
+

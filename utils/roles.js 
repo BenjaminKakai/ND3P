@@ -1,0 +1,31 @@
+/**
+ * Available user roles in the system
+ */
+const roles = {
+    ADMIN: 'admin',
+    USER: 'user',
+};
+
+/**
+ * Permission mappings for each role
+ */
+const rolePermissions = {
+    [roles.ADMIN]: ['readAny', 'writeAny'],
+    [roles.USER]: ['readOwn'],
+};
+
+/**
+ * Check if a user has a specific permission
+ * @param {string} userRole - The role of the user
+ * @param {string} permission - The permission to check
+ * @returns {boolean}
+ */
+function hasPermission(userRole, permission) {
+    return rolePermissions[userRole]?.includes(permission) || false;
+}
+
+module.exports = {
+    roles,
+    rolePermissions,
+    hasPermission
+};
