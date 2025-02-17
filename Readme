@@ -1,13 +1,33 @@
-# API Documentation
+**Project Documentation**
 
-## Authentication & Token Retrieval
+This document provides a comprehensive guide to the project, including API documentation, file structure, and setup instructions. The project is a backend system for managing stores, services, staff, offers, bookings, and user interactions. It uses JWT for authentication and MongoDB for data storage.
 
-**Endpoint:** `POST /api/auth/login`
+**Table of Contents**
 
-**Description:**
-This endpoint allows users to authenticate and retrieve a JWT token. You only need to use this if you don’t already have a valid token.
+**1. API Documentation**
+• Authentication & Token Retrieval
+• Store API
+• Services API
+• Staff API
+• Offers API
+• Booking API
 
-**Request:**
+**2. File Structure**
+
+**3. Environment Setup**
+
+**4. Database Configuration**
+
+**5. Notes**
+
+**API Documentation**
+
+**Authentication & Token Retrieval**
+
+**Endpoint:** POST /api/auth/login
+
+**Description:** Allows users to authenticate and retrieve a JWT token.
+
 ```bash
 curl -X POST http://localhost:3000/api/auth/login \
   -H "Content-Type: application/json" \
@@ -17,76 +37,56 @@ curl -X POST http://localhost:3000/api/auth/login \
   }'
 ```
 
----
+**Store API**
 
-## Store API
+**Endpoint:** GET /api/stores
 
-**Endpoint:** `GET /api/stores`
+**Description:** Retrieves a list of available stores.
 
-**Description:**
-Retrieves a list of available stores.
-
-**Request:**
 ```bash
 curl -X GET http://localhost:3000/api/stores \
   -H "Authorization: Bearer <your_jwt_token>"
 ```
 
----
+**Services API**
 
-## Services API
+**Endpoint:** GET /api/services
 
-**Endpoint:** `GET /api/services`
+**Description:** Fetches a list of available services.
 
-**Description:**
-Fetches a list of available services.
-
-**Request:**
 ```bash
 curl -X GET http://localhost:3000/api/services \
   -H "Authorization: Bearer <your_jwt_token>"
 ```
 
----
+**Staff API**
 
-## Staff API
+**Endpoint:** GET /api/staff
 
-**Endpoint:** `GET /api/staff`
+**Description:** Retrieves a list of staff members.
 
-**Description:**
-Retrieves a list of staff members.
-
-**Request:**
 ```bash
 curl -X GET http://localhost:3000/api/staff \
   -H "Authorization: Bearer <your_jwt_token>"
 ```
 
----
+**Offers API**
 
-## Offers API
+**Endpoint:** GET /api/offers
 
-**Endpoint:** `GET /api/offers`
+**Description:** Fetches the available offers.
 
-**Description:**
-Fetches the available offers.
-
-**Request:**
 ```bash
 curl -X GET http://localhost:3000/api/offers \
   -H "Authorization: Bearer <your_jwt_token>"
 ```
 
----
+**Booking API**
 
-## Booking API
+**Endpoint:** POST /api/bookings
 
-**Endpoint:** `POST /api/bookings`
+**Description:** Creates a new booking based on an available offer.
 
-**Description:**
-Creates a new booking based on an available offer.
-
-**Request:**
 ```bash
 curl -X POST http://localhost:3000/api/bookings \
   -H "Content-Type: application/json" \
@@ -98,10 +98,85 @@ curl -X POST http://localhost:3000/api/bookings \
   }'
 ```
 
----
+**File Structure**
 
-## Notes:
-- Replace `<your_jwt_token>` with the actual token received from the authentication endpoint.
-- Ensure the API server is running at `http://localhost:3000` or change the URL accordingly.
-- Use valid offer IDs when making a booking request.
+```
+/controllers
+├── authController.js
+├── storeController.js
+├── staffController.js
+├── serviceController.js
+├── offerController.js
+└── bookingController.js
 
+/models
+├── User.js
+├── Store.js
+├── Staff.js
+├── Service.js
+├── Offer.js
+└── Booking.js
+
+/repositories
+├── userRepository.js
+├── storeRepository.js
+├── staffRepository.js
+├── serviceRepository.js
+├── offerRepository.js
+└── bookingRepository.js
+
+/routes
+├── authRoutes.js
+├── storeRoutes.js
+├── staffRoutes.js
+├── serviceRoutes.js
+├── offerRoutes.js
+└── bookingRoutes.js
+
+/middlewares
+├── authMiddleware.js
+└── errorHandler.js
+
+/utils
+├── email.js
+├── database.js
+├── roles.js
+└── logger.js
+```
+
+**Environment Setup**
+
+**1. Clone the repository:**
+```bash
+git clone <repository-url>
+```
+
+**2. Install dependencies:**
+```bash
+npm install
+```
+
+**3. Create a .env file in the root directory and add the following environment variables:**
+```env
+PORT=3000
+MONGODB_URI=mongodb+srv://benjaminkakai001:eT0K0AL9mmeclSy1@cluster0.mongodb.net/<dbname>?retryWrites=true&w=majority
+JWT_SECRET=<your_jwt_secret>
+```
+
+**4. Start the server:**
+```bash
+npm start
+```
+
+**Database Configuration**
+
+**Username:** benjaminkakai001
+**Password:** eT0K0AL9mmeclSy1
+**IP:** 00.00.00
+
+**Notes**
+
+• Replace <your_jwt_token> with the actual token received from the authentication endpoint
+• Ensure the API server is running at http://localhost:3000 or change the URL accordingly
+• Use valid offer IDs when making a booking request
+• The userService.js is not yet implemented and may not be logically required for the current setup
