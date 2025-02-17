@@ -21,28 +21,37 @@ const sequelize = new Sequelize(
     }
 );
 
-// Initialize models in correct order
-const userModels = UserModel(sequelize, DataTypes);
-const { User, Social } = userModels;
-const { Store } = StoreModel(sequelize, DataTypes);
-const { Staff, StaffService } = StaffModel(sequelize, DataTypes);
-const Service = ServiceModel(sequelize, DataTypes);
-const { Offer, Quote, OfferLike } = OfferModel(sequelize, DataTypes);
-const { Booking } = BookingModel(sequelize, DataTypes);
+// Initialize all models first
+const db = {};
 
-// Store all models in an object
-const db = {
-    User,
-    Social,
-    Store,
-    Staff,
-    Service,
-    Offer,
-    Quote,
-    OfferLike,
-    Booking,
-    StaffService
-};
+// Initialize models and store them in db object
+const userModels = UserModel(sequelize, DataTypes);
+db.User = userModels.User;
+db.Social = userModels.Social;
+
+const storeModel = StoreModel(sequelize, DataTypes);
+db.Store = storeModel.Store;
+
+const staffModels = StaffModel(sequelize, DataTypes);
+db.Staff = staffModels.Staff;
+db.StaffService = staffModels.StaffService;
+
+db.Service = ServiceModel(sequelize, DataTypes);
+
+const offerModels = OfferModel(sequelize, DataTypes);
+db.Offer = offerModels.Offer;
+db.Quote = offerModels.Quote;
+db.OfferLike = offerModels.OfferLike;
+
+// Initialize booking-related models
+const bookingModels = BookingModel(sequelize, DataTypes);
+db.Booking = bookingModels.Booking;
+db.Payment = bookingModels.Payment;
+db.Chat = bookingModels.Chat;
+db.Message = bookingModels.Message;
+db.Follow = bookingModels.Follow;
+db.Invoice = bookingModels.Invoice;
+db.Review = bookingModels.Review;
 
 // Add sequelize instance to db object
 db.sequelize = sequelize;
@@ -50,9 +59,12 @@ db.Sequelize = Sequelize;
 
 // Run associations after all models are properly initialized
 Object.keys(db).forEach(modelName => {
-    if (db[modelName] && db[modelName].associate) {
+    if (db[modelName] && typeof db[modelName].associate === 'function') {
         db[modelName].associate(db);
     }
 });
+
+// Run the booking models associations
+bookingModels.associate(db);
 
 module.exports = db;

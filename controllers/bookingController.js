@@ -1,19 +1,20 @@
+// At the top of bookingController.js
+const db = require('../models'); // Import the db object that contains all models
 const { 
     Booking, 
     Offer, 
     Service, 
     Store, 
     User, 
-    Payment, 
+    Payment,
     Staff,
     Chat,
     Message,
     Review,
-    StoreSubscription,
-    Invoice,
     Follow,
-    Like
-} = require('../models');
+    Invoice
+} = db;  // Destructure the models from the db object
+
 const QRCode = require('qrcode');
 const { sendEmail } = require('../utils/emailUtil');
 const ejs = require('ejs');

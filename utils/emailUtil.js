@@ -1,44 +1,64 @@
 const nodemailer = require('nodemailer');
+require('dotenv').config();
 
+// Create reusable transporter using environment variables
 const transporter = nodemailer.createTransport({
-    host: process.env.MAIL_HOST,
-    port: process.env.MAIL_PORT,
-    secure: false,
+    service: 'gmail',
     auth: {
-        user: process.env.MAIL_USERNAME,
-        pass: process.env.MAIL_PASSWORD,
+        user: process.env.EMAIL_USER || 'benjaminkakai001@gmail.com',
+        pass: 'kxyl sjao upwg qtzw'  // App password provided
     },
     tls: {
-        rejectUnauthorized: false,
-    },
+        rejectUnauthorized: process.env.NODE_ENV === 'production'
+    }
 });
 
+// Verify transporter connection
+async function verifyConnection() {
+    try {
+        await transporter.verify();
+        console.log('Email server connection established');
+        return true;
+    } catch (error) {
+        console.error('Email server connection failed:', error);
+        return false;
+    }
+}
+
 /**
- * Send an email using configured transporter
+ * Send email using nodemailer
  * @param {string} to - Recipient email address
  * @param {string} subject - Email subject
- * @param {string} text - Plain text content
- * @param {string} html - HTML content
+ * @param {string} text - Plain text version of email
+ * @param {string} html - HTML version of email
+ * @returns {Promise} - Resolves with email info or rejects with error
  */
 async function sendEmail(to, subject, text, html) {
     try {
+        // Input validation
+        if (!to || !subject || (!text && !html)) {
+            throw new Error('Missing required email parameters');
+        }
+
         const mailOptions = {
-            from: process.env.MAIL_FROM_ADDRESS,
+            from: process.env.EMAIL_USER || 'benjaminkakai001@gmail.com',
             to,
             subject,
             text,
             html
         };
 
+        // Send mail and wait for response
         const info = await transporter.sendMail(mailOptions);
-        console.log('Email sent: ', info.response);
+        console.log('Email sent successfully:', info.messageId);
         return info;
     } catch (error) {
-        console.error('Error sending email:', error);
-        throw error;
+        console.error('Failed to send email:', error);
+        throw new Error(`Email sending failed: ${error.message}`);
     }
 }
 
 module.exports = {
     sendEmail,
+    verifyConnection
 };

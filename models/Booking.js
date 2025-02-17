@@ -4,183 +4,64 @@ const { Model, DataTypes } = require('sequelize');
 const { v4: uuidv4 } = require('uuid');
 
 module.exports = (sequelize) => {
+  // Define all model classes
   class Booking extends Model {}
+  class Payment extends Model {}
+  class Chat extends Model {}
+  class Message extends Model {}
+  class Follow extends Model {}
+  class Invoice extends Model {}
+  class Review extends Model {}
 
-  Booking.init(
-    {
-      id: {
-        type: DataTypes.UUID,
-        defaultValue: uuidv4,
-        primaryKey: true,
-      },
-      offerId: {
-        type: DataTypes.UUID,
-        allowNull: false,
-      },
-      userId: {
-        type: DataTypes.UUID,
-        allowNull: false,
-      },
-      paymentId: {
-        type: DataTypes.UUID,
-        allowNull: true,
-      },
-      paymentUniqueCode: {
-        type: DataTypes.STRING,
-        allowNull: true,
-      },
-      status: {
-        type: DataTypes.ENUM('pending', 'cancelled', 'fulfilled'),
-        allowNull: false,
-        defaultValue: 'pending',
-      },
-      startTime: {
-        type: DataTypes.DATE,
-        allowNull: false,
-      },
-      endTime: {
-        type: DataTypes.DATE,
-        allowNull: false,
-      },
-      qrCode: {
-        type: DataTypes.TEXT,
-        allowNull: true,
-      },
-    },
-    {
-      sequelize,
-      modelName: 'Booking',
-      tableName: 'Bookings',
-      timestamps: true,
-    }
-  );
-
-  // Define Chat model
-  Booking.Chat = sequelize.define('Chat', {
+  // Initialize Booking
+  Booking.init({
     id: {
       type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
+      defaultValue: uuidv4,
       primaryKey: true,
+    },
+    offerId: {
+      type: DataTypes.UUID,
+      allowNull: false,
     },
     userId: {
       type: DataTypes.UUID,
       allowNull: false,
     },
-    storeId: {
+    paymentId: {
       type: DataTypes.UUID,
-      allowNull: false,
+      allowNull: true,
     },
-  }, {
-    tableName: 'Chats',
-    timestamps: true,
-  });
-
-  // Define Message model
-  Booking.Message = sequelize.define('Message', {
-    id: {
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
-      primaryKey: true,
-    },
-    chatId: {
-      type: DataTypes.UUID,
-      allowNull: false,
-      references: {
-        model: 'Chats',
-        key: 'id',
-      },
-    },
-    senderType: {
-      type: DataTypes.ENUM('user', 'storeOwner'),
-      allowNull: false,
-    },
-    content: {
-      type: DataTypes.TEXT,
-      allowNull: false,
-    },
-    isRead: {
-      type: DataTypes.BOOLEAN,
-      defaultValue: false,
-    },
-  }, {
-    tableName: 'Messages',
-    timestamps: true,
-  });
-
-  // Define Follow model
-  Booking.Follow = sequelize.define('Follow', {
-    id: {
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
-      primaryKey: true,
-    },
-    user_id: {
-      type: DataTypes.UUID,
-      allowNull: false,
-      references: {
-        model: 'Users',
-        key: 'id',
-      },
-    },
-    store_id: {
-      type: DataTypes.UUID,
-      allowNull: false,
-      references: {
-        model: 'Stores',
-        key: 'id',
-      },
-    },
-  }, {
-    timestamps: true,
-    tableName: 'Follows',
-  });
-
-  // Define Invoice model
-  Booking.Invoice = sequelize.define('Invoice', {
-    id: {
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
-      primaryKey: true,
-    },
-    store_id: {
-      type: DataTypes.UUID,
-      allowNull: false,
-      references: {
-        model: 'Stores',
-        key: 'id',
-      },
-    },
-    invoice_number: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    billing_date: {
-      type: DataTypes.DATE,
-      allowNull: false,
-    },
-    due_date: {
-      type: DataTypes.DATE,
-      allowNull: false,
-    },
-    amount: {
-      type: DataTypes.DECIMAL(10, 2),
-      allowNull: false,
-    },
-    payment_status: {
-      type: DataTypes.ENUM('unpaid', 'paid'),
-      defaultValue: 'unpaid',
-    },
-    mpesa_transaction_id: {
+    paymentUniqueCode: {
       type: DataTypes.STRING,
       allowNull: true,
     },
+    status: {
+      type: DataTypes.ENUM('pending', 'cancelled', 'fulfilled'),
+      allowNull: false,
+      defaultValue: 'pending',
+    },
+    startTime: {
+      type: DataTypes.DATE,
+      allowNull: false,
+    },
+    endTime: {
+      type: DataTypes.DATE,
+      allowNull: false,
+    },
+    qrCode: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
   }, {
+    sequelize,
+    modelName: 'Booking',
+    tableName: 'Bookings',
     timestamps: true,
-    tableName: 'Invoices',
   });
 
-  // Define Payment model
-  Booking.Payment = sequelize.define('Payment', {
+  // Initialize Payment
+  Payment.init({
     id: {
       type: DataTypes.UUID,
       defaultValue: DataTypes.UUIDV4,
@@ -221,12 +102,146 @@ module.exports = (sequelize) => {
       allowNull: false,
     },
   }, {
+    sequelize,
+    modelName: 'Payment',
     tableName: 'Payments',
     timestamps: true,
   });
 
-  // Define Review model
-  Booking.Review = sequelize.define('Review', {
+  // Initialize Chat
+  Chat.init({
+    id: {
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
+      primaryKey: true,
+    },
+    userId: {
+      type: DataTypes.UUID,
+      allowNull: false,
+    },
+    storeId: {
+      type: DataTypes.UUID,
+      allowNull: false,
+    },
+  }, {
+    sequelize,
+    modelName: 'Chat',
+    tableName: 'Chats',
+    timestamps: true,
+  });
+
+  // Initialize Message
+  Message.init({
+    id: {
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
+      primaryKey: true,
+    },
+    chatId: {
+      type: DataTypes.UUID,
+      allowNull: false,
+      references: {
+        model: 'Chats',
+        key: 'id',
+      },
+    },
+    senderType: {
+      type: DataTypes.ENUM('user', 'storeOwner'),
+      allowNull: false,
+    },
+    content: {
+      type: DataTypes.TEXT,
+      allowNull: false,
+    },
+    isRead: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
+  }, {
+    sequelize,
+    modelName: 'Message',
+    tableName: 'Messages',
+    timestamps: true,
+  });
+
+  // Initialize Follow
+  Follow.init({
+    id: {
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
+      primaryKey: true,
+    },
+    user_id: {
+      type: DataTypes.UUID,
+      allowNull: false,
+      references: {
+        model: 'Users',
+        key: 'id',
+      },
+    },
+    store_id: {
+      type: DataTypes.UUID,
+      allowNull: false,
+      references: {
+        model: 'Stores',
+        key: 'id',
+      },
+    },
+  }, {
+    sequelize,
+    modelName: 'Follow',
+    tableName: 'Follows',
+    timestamps: true,
+  });
+
+  // Initialize Invoice
+  Invoice.init({
+    id: {
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
+      primaryKey: true,
+    },
+    store_id: {
+      type: DataTypes.UUID,
+      allowNull: false,
+      references: {
+        model: 'Stores',
+        key: 'id',
+      },
+    },
+    invoice_number: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    billing_date: {
+      type: DataTypes.DATE,
+      allowNull: false,
+    },
+    due_date: {
+      type: DataTypes.DATE,
+      allowNull: false,
+    },
+    amount: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: false,
+    },
+    payment_status: {
+      type: DataTypes.ENUM('unpaid', 'paid'),
+      defaultValue: 'unpaid',
+    },
+    mpesa_transaction_id: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+  }, {
+    sequelize,
+    modelName: 'Invoice',
+    tableName: 'Invoices',
+    timestamps: true,
+  });
+
+  // Initialize Review
+  Review.init({
     id: {
       type: DataTypes.UUID,
       defaultValue: DataTypes.UUIDV4,
@@ -261,48 +276,62 @@ module.exports = (sequelize) => {
       },
     },
   }, {
-    timestamps: true,
+    sequelize,
+    modelName: 'Review',
     tableName: 'Reviews',
+    timestamps: true,
   });
 
-  // Define all associations
-  Booking.associate = (models) => {
+  // Define associations function
+  const associate = (models) => {
     // Booking associations
     Booking.belongsTo(models.Offer, { foreignKey: 'offerId' });
     Booking.belongsTo(models.Store, { foreignKey: 'storeId' });
     Booking.belongsTo(models.User, { foreignKey: 'userId' });
-
-    // Chat associations
-    Booking.Chat.belongsTo(models.User, { foreignKey: 'userId', as: 'user' });
-    Booking.Chat.hasMany(Booking.Message, { foreignKey: 'chatId', as: 'messages' });
-
-    // Message associations
-    Booking.Message.belongsTo(Booking.Chat, { foreignKey: 'chatId', as: 'chat' });
-
-    // Follow associations
-    Booking.Follow.belongsTo(models.User, { foreignKey: 'user_id', as: 'user' });
-    Booking.Follow.belongsTo(models.Store, { foreignKey: 'store_id', as: 'store' });
-
-    // Invoice associations
-    Booking.Invoice.belongsTo(models.Store, {
-      foreignKey: 'store_id',
-      onDelete: 'CASCADE',
-    });
+    Booking.belongsTo(Payment, { foreignKey: 'paymentId' });
 
     // Payment associations
-    Booking.Payment.belongsTo(models.User, { foreignKey: 'user_id' });
-    Booking.Payment.belongsTo(models.Offer, { foreignKey: 'offer_id' });
+    Payment.belongsTo(models.User, { foreignKey: 'user_id' });
+    Payment.belongsTo(models.Offer, { foreignKey: 'offer_id' });
+    Payment.hasMany(Booking, { foreignKey: 'paymentId' });
 
-    // Review associations
-    Booking.Review.belongsTo(models.Store, {
+    // Chat associations
+    Chat.belongsTo(models.User, { foreignKey: 'userId', as: 'user' });
+    Chat.hasMany(Message, { foreignKey: 'chatId', as: 'messages' });
+
+    // Message associations
+    Message.belongsTo(Chat, { foreignKey: 'chatId', as: 'chat' });
+
+    // Follow associations
+    Follow.belongsTo(models.User, { foreignKey: 'user_id', as: 'user' });
+    Follow.belongsTo(models.Store, { foreignKey: 'store_id', as: 'store' });
+
+    // Invoice associations
+    Invoice.belongsTo(models.Store, {
       foreignKey: 'store_id',
       onDelete: 'CASCADE',
     });
-    Booking.Review.belongsTo(models.User, {
+
+    // Review associations
+    Review.belongsTo(models.Store, {
+      foreignKey: 'store_id',
+      onDelete: 'CASCADE',
+    });
+    Review.belongsTo(models.User, {
       foreignKey: 'user_id',
       onDelete: 'SET NULL',
     });
   };
 
-  return Booking;
+  // Return all models and associate function
+  return {
+    Booking,
+    Payment,
+    Chat,
+    Message,
+    Follow,
+    Invoice,
+    Review,
+    associate
+  };
 };
