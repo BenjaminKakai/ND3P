@@ -21,16 +21,16 @@ router.get('/booking-times', BookingController.getBookingTimes);
 router.post('/validate', BookingController.validateAndFulfill);
 router.post('/fulfill', BookingController.markAsFulfilled);
 
-// Payment Routes (your existing routes)
-router.post('/transactions/subscribe', BookingController.createPayment);
-router.post('/transactions/pay', BookingController.createPayment);
-router.post('/transactions/mpesa-callback', BookingController.handlePaymentCallback);
-router.post('/payments', BookingController.createPayment);
+// Payment Routes
+router.post('/payments', BookingController.createPayment); // Unified payment route
 router.post('/payments/callback', BookingController.handlePaymentCallback);
 router.get('/payments', BookingController.getAllPayments);
 router.get('/payments/status/:status', BookingController.getPaymentsByStatus);
 router.get('/payments/user/:user_id', BookingController.getPaymentsByUser);
 router.get('/payments/offer/:offer_id', BookingController.getPaymentsByOffer);
 router.get('/payments/store/:store_id', BookingController.getPaymentsByStore);
+
+// M-Pesa STK Push Route
+router.post('/mpesa/stkpush', BookingController.createPayment); // Use the existing createPayment method
 
 module.exports = router;

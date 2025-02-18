@@ -43,11 +43,11 @@ const jwtConfig = {
 
 // Daraja (M-Pesa) API Configuration
 const darajaConfig = {
-  apiKey: process.env.DARAJA_API_KEY,
-  apiSecret: process.env.DARAJA_API_SECRET,
-  passkey: process.env.DARAJA_PASSKEY,
-  shortcode: process.env.DARAJA_SHORTCODE,
-  environment: process.env.DARAJA_ENVIRONMENT || 'sandbox',
+  apiKey: 'sfFCdbTrzPb300j2QbQVATjtKXpxX4fbI1LT0oufw4Gb44d1',  // Consumer Key
+  apiSecret: 'Zpp5LbEN3UOAHFgsGeGyY1NJQV7UBJsRNaFg45v93Sbd0zQDzXOGqFwEQhuhAOkN',  // Consumer Secret
+  passkey: process.env.DARAJA_PASSKEY,         // You can add passkey if available
+  shortcode: process.env.DARAJA_SHORTCODE,     // Make sure you add shortcode if available
+  environment: 'sandbox',                      // Set environment to 'sandbox' for testing
   endpoints: {
     oauth: 'https://sandbox.safaricom.co.ke/oauth/v1/generate',
     stkPush: 'https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest',

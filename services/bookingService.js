@@ -1,5 +1,5 @@
 const { Op } = require('sequelize');
-const { Booking, Offer, Service, Store, User, Payment, Chat, Message, Review, Invoice } = require('../models');
+const { Booking, Offer, Service, Store, User, Payment } = require('../models');
 const QRCode = require('qrcode');
 const path = require('path');
 const moment = require('moment');
@@ -7,6 +7,7 @@ const { generateUniqueCode } = require('../utils/paymentUtils');
 const { sendEmail } = require('../utils/emailUtil');
 const ejs = require('ejs');
 const fs = require('fs');
+const axios = require('axios');
 
 const BookingService = {
     generateTimeSlots: (openingTime, closingTime) => {
@@ -268,12 +269,45 @@ const BookingService = {
         const booking = await Booking.findByPk(bookingId);
         if (!booking) throw new Error('Booking not found');
 
-        // Payment processing logic would go here
+        // Get M-Pesa access token
+        const auth = Buffer.from(`${process.env.MPESA_CONSUMER_KEY}:${process.env.MPESA_CONSUMER_SECRET}`).toString('base64');
+        const tokenResponse = await axios.get('https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials', {
+            headers: { Authorization: `Basic ${auth}` }
+        });
+        const accessToken = tokenResponse.data.access_token;
+
+        // Initiate STK Push
+        const timestamp = new Date().toISOString().replace(/[-:.]/g, '').slice(0, -4);
+        const password = Buffer.from(`${process.env.MPESA_SHORTCODE}${process.env.MPESA_PASSKEY}${timestamp}`).toString('base64');
+
+        const stkResponse = await axios.post(
+            'https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest',
+            {
+                BusinessShortCode: process.env.MPESA_SHORTCODE,
+                Password: password,
+                Timestamp: timestamp,
+                TransactionType: 'CustomerPayBillOnline',
+                Amount: amount,
+                PartyA: phoneNumber,
+                PartyB: process.env.MPESA_SHORTCODE,
+                PhoneNumber: phoneNumber,
+                CallBackURL: `${process.env.BASE_URL}/api/mpesa/callback`,
+                AccountReference: `Booking-${bookingId}`,
+                TransactionDesc: 'Payment for booking'
+            },
+            {
+                headers: { Authorization: `Bearer ${accessToken}` }
+            }
+        );
+
+        // Save payment details
         const payment = await Payment.create({
             bookingId,
             amount,
             phoneNumber,
             status: 'pending',
+            merchantRequestId: stkResponse.data.MerchantRequestID,
+            checkoutRequestId: stkResponse.data.CheckoutRequestID,
             unique_code: generateUniqueCode()
         });
 

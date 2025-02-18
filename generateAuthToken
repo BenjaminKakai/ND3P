@@ -1,0 +1,101 @@
+const axios = require('axios');
+
+// Helper function to generate the auth token
+async function generateAuthToken(consumerKey, consumerSecret) {
+  const auth = Buffer.from(`${consumerKey}:${consumerSecret}`).toString('base64');
+  try {
+    const response = await axios.post(
+      'https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials',
+      {},
+      {
+        headers: {
+          'Authorization': `Basic ${auth}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+    return response.data.access_token;
+  } catch (error) {
+    console.error('Auth Token Error:', error.response?.data || error.message);
+    throw new Error('Failed to generate auth token');
+  }
+}
+
+// Helper function to generate the password
+function generatePassword(shortcode, passkey, timestamp) {
+  const str = shortcode + passkey + timestamp;
+  return Buffer.from(str).toString('base64');
+}
+
+// Main STK push function
+async function initiateSTKPush({
+  consumerKey,
+  consumerSecret,
+  businessShortCode,
+  passkey,
+  phoneNumber,
+  amount,
+  accountReference,
+  transactionDesc = 'Payment for booking'
+}) {
+  try {
+    // Get auth token
+    const token = await generateAuthToken(consumerKey, consumerSecret);
+    
+    // Generate timestamp
+    const timestamp = new Date().toISOString().replace(/[^0-9]/g, '').slice(0, -3);
+    
+    // Generate password
+    const password = generatePassword(businessShortCode, passkey, timestamp);
+    
+    // Prepare STK push request
+    const stkPushRequest = {
+      BusinessShortCode: businessShortCode,
+      Password: password,
+      Timestamp: timestamp,
+      TransactionType: 'CustomerPayBillOnline',
+      Amount: amount,
+      PartyA: phoneNumber,
+      PartyB: businessShortCode,
+      PhoneNumber: phoneNumber,
+      CallBackURL: 'https://your-callback-url.com/mpesa/callback',
+      AccountReference: accountReference,
+      TransactionDesc: transactionDesc
+    };
+
+    // Make the STK push request
+    const response = await axios.post(
+      'https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest',
+      stkPushRequest,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error('STK Push Error:', error.response?.data || error.message);
+    throw new Error('Failed to initiate STK push');
+  }
+}
+
+// Example usage
+async function example() {
+  try {
+    const result = await initiateSTKPush({
+      consumerKey: 'your_consumer_key',
+      consumerSecret: 'your_consumer_secret',
+      businessShortCode: '174379', // Sandbox shortcode
+      passkey: 'bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919', // Sandbox passkey
+      phoneNumber: '254746026037',
+      amount: '100',
+      accountReference: 'Booking Reference #8c7844ca-f524-457e-bd0c-32b47e3e911a'
+    });
+    console.log('STK Push Result:', result);
+  } catch (error) {
+    console.error('Error:', error.message);
+  }
+}

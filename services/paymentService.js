@@ -1,6 +1,5 @@
-// services/paymentService.js
 const axios = require('axios');
-const { Payment } = require('../models');
+const { Payment, Booking } = require('../models');
 const { generateUniqueCode } = require('../utils/paymentUtils');
 
 class PaymentService {
@@ -10,90 +9,141 @@ class PaymentService {
      */
     async getMpesaAccessToken() {
         try {
-            const response = await axios({
-                method: 'GET',
-                url: `${process.env.MPESA_BASE_URL}/oauth/v1/generate?grant_type=client_credentials`,
-                auth: {
-                    username: process.env.MPESA_CONSUMER_KEY,
-                    password: process.env.MPESA_CONSUMER_SECRET,
-                },
-            });
+            if (!process.env.MPESA_CONSUMER_KEY || !process.env.MPESA_CONSUMER_SECRET) {
+                throw new Error('M-Pesa credentials are not properly configured');
+            }
+
+            const auth = Buffer.from(
+                `${process.env.MPESA_CONSUMER_KEY}:${process.env.MPESA_CONSUMER_SECRET}`
+            ).toString('base64');
+
+            console.log('Attempting to get M-Pesa token');
+
+            const response = await axios.get(
+                `${process.env.MPESA_BASE_URL}/oauth/v1/generate?grant_type=client_credentials`,
+                {
+                    headers: {
+                        'Authorization': `Basic ${auth}`
+                    }
+                }
+            );
+
+            if (!response.data.access_token) {
+                throw new Error('No access token in response');
+            }
 
             return response.data.access_token;
         } catch (error) {
-            console.error('Error fetching M-Pesa access token:', error);
-            throw new Error('Failed to fetch M-Pesa access token');
+            console.error('Detailed token error:', error.response?.data || error.message);
+            throw new Error(`Failed to fetch M-Pesa access token: ${error.message}`);
         }
     }
 
     /**
      * Initiates a payment transaction via M-Pesa STK Push
-     * @param {number} amount - The amount to be paid
-     * @param {string} phoneNumber - The customer's phone number
-     * @param {string} accessToken - M-Pesa API access token
-     * @returns {Promise<Object>} - M-Pesa API response
+     * @param {Object} param0 - Payment details object
+     * @returns {Promise<Object>} - Payment initiation result
      */
-    async initiatePayment(amount, phoneNumber, accessToken) {
-        const paymentData = {
-            BusinessShortCode: process.env.BUSINESS_SHORTCODE,
-            LipaNaMpesaOnlineShortcode: process.env.LIPA_SHORTCODE,
-            LipaNaMpesaOnlineShortcodeKey: process.env.LIPA_SHORTCODE_KEY,
-            PhoneNumber: phoneNumber,
-            Amount: amount,
-            AccountReference: "Payment for service",
-            TransactionDesc: "Payment for service",
-        };
-
-        const headers = {
-            'Authorization': `Bearer ${accessToken}`
-        };
-
+    async initiatePayment({ bookingId, amount, phoneNumber }) {
         try {
+            if (!process.env.BUSINESS_SHORTCODE || !process.env.LIPA_SHORTCODE_KEY) {
+                throw new Error('M-Pesa business credentials are not properly configured');
+            }
+
+            const accessToken = await this.getMpesaAccessToken();
+
+            const timestamp = new Date().toISOString().replace(/[^0-9]/g, '').slice(0, 14);
+            
+            const password = Buffer.from(
+                `${process.env.BUSINESS_SHORTCODE}${process.env.LIPA_SHORTCODE_KEY}${timestamp}`
+            ).toString('base64');
+
+            const formattedPhone = phoneNumber.startsWith('254') ? 
+                phoneNumber : 
+                `254${phoneNumber.replace(/^0+/, '')}`;
+
+
+                const stkPushRequest = {
+                    BusinessShortCode: process.env.BUSINESS_SHORTCODE,
+                    Password: password,
+                    Timestamp: timestamp,
+                    TransactionType: "CustomerPayBillOnline",
+                    Amount: parseInt(amount),
+                    PartyA: formattedPhone,
+                    PartyB: process.env.BUSINESS_SHORTCODE,
+                    PhoneNumber: formattedPhone,
+                    CallBackURL: `${process.env.BASE_URL}/api/bookings/payments/callback`, // Updated path
+                    AccountReference: `Booking #${bookingId}`,
+                    TransactionDesc: "Payment for booking"
+                };
+
+            console.log('STK Push Request:', stkPushRequest);
+
             const response = await axios.post(
-                'https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest',
-                paymentData,
-                { headers }
+                `${process.env.MPESA_BASE_URL}/mpesa/stkpush/v1/processrequest`,
+                stkPushRequest,
+                {
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                }
             );
 
-            return response.data;
+            console.log('STK Push Response:', response.data);
+
+            if (response.data.ResponseCode === '0') {
+                await this.recordPaymentTransaction({
+                    bookingId,
+                    amount,
+                    phoneNumber: formattedPhone,
+                    status: 'pending',
+                    merchantRequestId: response.data.MerchantRequestID
+                });
+                return {
+                    success: true,
+                    message: 'Payment initiated successfully',
+                    data: response.data
+                };
+            } else {
+                throw new Error(`STK push failed: ${response.data.ResponseDescription}`);
+            }
         } catch (error) {
-            console.error('Error making payment request', error);
-            throw new Error('Failed to make payment request');
+            console.error('Detailed payment error:', error.response?.data || error.message);
+            throw new Error(`Failed to initiate payment: ${error.message}`);
         }
     }
 
-    /**
-     * Records a payment transaction in the database
-     * @param {Object} paymentDetails - Payment details
-     * @returns {Promise<Payment>} - Created payment record
-     */
     async recordPaymentTransaction(paymentDetails) {
         const { bookingId, amount, phoneNumber, status, merchantRequestId } = paymentDetails;
-
-        const uniqueCode = generateUniqueCode();
+        
         try {
-            const newPayment = await Payment.create({
+            // First fetch the booking to get the user_id and offer_id
+            const booking = await Booking.findByPk(bookingId);
+            if (!booking) {
+                throw new Error('Booking not found');
+            }
+    
+            console.log('Found booking:', booking); // Add this to debug
+    
+            return await Payment.create({
                 bookingId,
+                user_id: booking.userId,  // Changed from booking.user_id to booking.userId
+                offer_id: booking.offerId,  // Changed from booking.offer_id to booking.offerId
                 amount,
-                phoneNumber,
+                phone_number: phoneNumber,
                 status,
-                merchantRequestId,
-                uniqueCode,
+                gateway: 'mpesa',
+                MerchantRequestID: merchantRequestId,
+                unique_code: generateUniqueCode(),
                 payment_date: new Date()
             });
-
-            return newPayment;
         } catch (error) {
             console.error('Error recording payment transaction:', error);
             throw new Error('Failed to record payment transaction');
         }
     }
 
-    /**
-     * Handles M-Pesa payment callback
-     * @param {Object} callbackData - Callback data from M-Pesa
-     * @returns {Promise<Object>} - Processing result
-     */
     async handlePaymentCallback(callbackData) {
         const { MerchantRequestID, ResultCode, ResultDesc } = callbackData;
 

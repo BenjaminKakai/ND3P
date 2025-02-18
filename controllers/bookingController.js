@@ -1,4 +1,3 @@
-// At the top of bookingController.js
 const db = require('../models'); // Import the db object that contains all models
 const { 
     Booking, 
@@ -635,50 +634,33 @@ const BookingController = {
                 return res.status(404).json({ error: 'Booking not found' });
             }
     
-            const accessToken = await paymentService.getMpesaAccessToken();
-            const paymentResponse = await paymentService.initiatePayment(amount, phoneNumber, accessToken);
-    
-            const payment = await paymentService.recordPaymentTransaction({
+            // Initiate STK Push payment with the new service structure
+            const paymentResponse = await paymentService.initiatePayment({
                 bookingId,
                 amount,
-                phoneNumber,
-                status: 'pending',
-                merchantRequestId: paymentResponse.MerchantRequestID
+                phoneNumber
             });
     
-            res.status(201).json({ payment });
+            // The payment recording is now handled inside initiatePayment
+            // We can return the payment response directly
+            res.status(201).json({ 
+                success: true,
+                merchantRequestId: paymentResponse.MerchantRequestID,
+                checkoutRequestId: paymentResponse.CheckoutRequestID
+            });
         } catch (error) {
-            console.error(error);
+            console.error('Payment creation error:', error);
             res.status(500).json({ error: 'Failed to create payment' });
         }
     },
 
     async handlePaymentCallback(req, res) {
-        const { MerchantRequestID, ResultCode, ResultDesc } = req.body;
-
         try {
-            const payment = await Payment.findOne({
-                where: { merchantRequestId: MerchantRequestID },
-                include: [{ model: Booking }],
-            });
-
-            if (!payment) {
-                return res.status(404).json({ error: 'Payment not found' });
-            }
-
-            payment.status = ResultCode === 0 ? 'completed' : 'failed';
-            payment.resultDescription = ResultDesc;
-            await payment.save();
-
-            if (ResultCode === 0 && payment.Booking) {
-                payment.Booking.status = 'confirmed';
-                await payment.Booking.save();
-            }
-
-            res.status(200).json({ message: 'Payment callback processed successfully' });
+            const result = await paymentService.handlePaymentCallback(req.body);
+            res.status(200).json(result);
         } catch (error) {
-            console.error(error);
-            res.status(500).json({ error: 'Failed to process payment callback' });
+            console.error('Error handling payment callback:', error);
+            res.status(500).json({ error: 'Failed to handle payment callback' });
         }
     },
 
@@ -824,6 +806,9 @@ const BookingController = {
             res.status(500).json({ error: 'Failed to fetch payments by store' });
         }
     },
+
+
+
 
     // Follow-related methods
     async followStore(req, res) {
