@@ -3,8 +3,9 @@ const express = require('express');
 const morgan = require('morgan');
 const cors = require('cors');
 const path = require('path');
-const { sequelize } = require('./models');
+const db = require('./models');
 const { authenticateUser } = require('./middlewares/authMiddleware');
+const enhancedBookingRoutes = require('./routes/enhancedBookingRoutes');
 
 // Initialize express app
 const app = express();
@@ -47,9 +48,10 @@ app.use('/api/services', authenticateUser, serviceRoutes);
 app.use('/api/offers', authenticateUser, offerRoutes);
 app.use('/api/bookings', authenticateUser, bookingRoutes);
 app.use('/api/interactions', authenticateUser, interactionRoutes);
+app.use('/api/enhanced-bookings', authenticateUser, enhancedBookingRoutes(db));
 
 // Test database connection
-sequelize.authenticate()
+db.sequelize.authenticate()
     .then(() => console.log('Database connected successfully'))
     .catch((err) => console.log('Database connection error:', err));
 
@@ -74,7 +76,7 @@ app.use((err, req, res, next) => {
 app.use(notFoundHandler);
 
 // Sync database and start server
-sequelize.sync()
+db.sequelize.sync()
     .then(() => {
         const PORT = process.env.PORT || 3000;
         app.listen(PORT, () => {
@@ -87,6 +89,7 @@ sequelize.sync()
             console.log('  /api/offers');
             console.log('  /api/bookings');
             console.log('  /api/interactions');
+            console.log('  /api/enhanced-bookings');
         });
     })
     .catch(err => {

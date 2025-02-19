@@ -5,6 +5,7 @@ const StaffModel = require('./Staff');
 const ServiceModel = require('./Service');
 const OfferModel = require('./Offer');
 const BookingModel = require('./Booking');
+const EnhancedBookingModel = require('./EnhancedBooking');
 
 // Initialize Sequelize
 const sequelize = new Sequelize(
@@ -52,6 +53,15 @@ db.Message = bookingModels.Message;
 db.Follow = bookingModels.Follow;
 db.Invoice = bookingModels.Invoice;
 db.Review = bookingModels.Review;
+
+// Initialize enhanced booking-related models
+const enhancedBookingModels = EnhancedBookingModel(sequelize, DataTypes);
+db.Branch = enhancedBookingModels.Branch;
+db.WorkingHours = enhancedBookingModels.WorkingHours;
+db.TimeSlot = enhancedBookingModels.TimeSlot;
+db.EnhancedStaff = enhancedBookingModels.EnhancedStaff;
+db.StaffUnavailability = enhancedBookingModels.StaffUnavailability;
+db.EnhancedBooking = enhancedBookingModels.EnhancedBooking;
 
 // Add sequelize instance to db object
 db.sequelize = sequelize;
